@@ -1,0 +1,159 @@
+#include <graphics.h>		
+#include <conio.h>
+#include <math.h>
+using namespace std;
+#define x0 350
+#define y0 350
+#define pi 3.14159265358979323846
+
+//点类
+class Point {
+public:
+	Point(double x, double y) {
+		this->_x = x;
+		this->_y = y;
+	}
+	Point(int x, int y) {
+		this->_x = x;
+		this->_y = y;
+	}
+	double _x;
+	double _y;
+};
+
+
+//变换矩阵类
+class Matrix {
+public:
+	Matrix(double a, double b, double p, double c, double d, double q, double k, double m, double s) {
+		this->a = a; this->b = b; this->p = p;
+		this->c = c; this->d = d; this->q = q;
+		this->k = k; this->m = m; this->s = s;
+	}
+	double a, b, c, d, k, m, p, q, s;
+};
+
+//平移、比例、镜像、错切变换函数
+//参数依次为范围左上角的点坐标，范围右下角的坐标，变换中心点坐标，变换矩阵
+void change(double x1, double y1, double x2, double y2, double z_x, double z_y, Matrix T) {
+	for (double i = x1; i <= x2; i++)
+		for (double j = y1; j <= y2; j++)
+		{
+			double x, y;
+			x = (i - z_x) * T.a + (i - z_x) * T.b + T.k + z_x;
+			y = (j - z_y) * T.c + (j - z_y) * T.d + T.m + z_y;
+			putpixel((int)x, (int)y, getpixel(i, j));
+		}
+
+
+}
+
+//范围内的像素点的旋转变换函数
+//参数依次为范围左上角的点坐标，范围右下角的坐标，变换中心点坐标，逆时针旋转角度angle
+void Roatate_image(double x1, double y1, double x2, double y2, double z_x, double z_y, double angle) {
+	double _angle = angle / 180.0 * pi;
+	double cos_a = cos(_angle);
+	double sin_a = sin(_angle);
+	for (double i = x1; i <= x2; i++)
+		for (double j = y1; j <= y2; j++)
+		{
+			double x, y, x1, y1;
+			x1 = i - z_x;
+			y1 = j - z_y;
+			x = x1 * cos_a - y1 * sin_a + z_x;
+			y = x1 * sin_a + y1 * cos_a + z_y;
+			putpixel(x, y, getpixel(i, j));
+		}
+
+}
+
+//点的旋转变换函数
+Point Roatate_point(Point P, double z_x, double z_y, double angle) {
+	double _angle = angle / 180.0 * pi;
+	double cos_a = cos(_angle);
+	double sin_a = sin(_angle);
+	double x, y, x1, y1;
+	x1 = P._x - z_x;
+	y1 = P._y - z_y;
+	x = x1 * cos_a - y1 * sin_a + z_x;
+	y = x1 * sin_a + y1 * cos_a + z_y;
+	Point P1(x, y);
+	return P1;
+}
+
+
+class Elem {
+public:
+	Elem(int x, int y) {
+		setlinecolor(BLACK);
+		//正方形
+		line(x, y, x + 50, y);
+		line(x, y, x, y + 50);
+		line(x, y + 50, x + 50, y + 50);
+		line(x + 50, y, x + 50, y + 50);
+		//左上
+		line(x + 10, y, x + 20, y + 10);
+		line(x + 20, y + 10, x + 40, y + 10);
+		line(x, y, x + 15, y + 15);
+		line(x, y + 10, x + 10, y + 20);
+		line(x + 20, y + 10, x + 10, y + 20);
+		line(x + 10, y + 20, x + 10, y + 40);
+		//右下
+		line(x + 40, y + 50, x + 30, y + 40);
+		line(x + 30, y + 40, x + 10, y + 40);
+		line(x + 50, y + 50, x + 35, y + 35);
+		line(x + 50, y + 40, x + 40, y + 30);
+		line(x + 30, y + 40, x + 40, y + 30);
+		line(x + 40, y + 30, x + 40, y + 10);
+		//斜线
+		line(x, y + 50, x + 50, y);
+		//斑马线
+		for (int i = 1; i <= 5; i++)
+			line(x + i, y + i, x, y + 2 * i);
+		for (int i = 1; i <= 10; i++)
+			line(x + 5 + i, y + 5 + i, x + i, y + 10 + i);
+		for (int i = 1; i <= 10; i++)
+			line(x + 10 + i, y + 40 - i, x + 10 + 2 * i, y + 40);
+		for (int i = 1; i <= 10; i++)
+			line(x + 20 + i, y + 30 - i, x + 30 + i, y + 40 - i);
+		for (int i = 1; i <= 10; i++)
+			line(x + 30 + i, y + 20 - i, x + 40, y + 30 - 2 * i);
+		//填充
+		setfillcolor(BLACK);
+		POINT pts_01[] = { {x,y}, {x + 10,y}, {x + 20,y + 10},{x + 15,y + 15} };
+		fillpolygon(pts_01, 4);
+		POINT pts_02[] = { {x,y + 10}, {x + 10,y + 20}, {x + 10,y + 40},{x,y + 50} };
+		fillpolygon(pts_02, 4);
+		POINT pts_03[] = { {x + 50,y + 50}, {x + 40,y + 50}, {x + 30,y + 40},{x + 35,y + 35} };
+		fillpolygon(pts_03, 4);
+		POINT pts_04[] = { {x + 50,y + 40}, {x + 40,y + 30}, {x + 40,y + 10},{x + 50,y} };
+		fillpolygon(pts_04, 4);
+
+
+	}
+};
+
+void Tuan(int x, int y) {
+	Elem e(x, y);
+	Roatate_image(x, y, x + 50, y + 50, x + 50, y + 50, 90);
+	Roatate_image(x, y, x + 50, y + 50, x + 50, y + 50, 180);
+	Roatate_image(x, y, x + 50, y + 50, x + 50, y + 50, 270);
+}
+int main() {
+
+	//创建画板
+	initgraph(700, 700);
+	setbkcolor(WHITE);
+	cleardevice();
+	for (int i = 0; i <= 600; i += 100)
+		for (int j = 0; j <= 600; j += 100)\
+		{
+			Tuan(i, j);
+		}
+
+
+
+	_getch();
+	closegraph();
+	return 0;
+}
